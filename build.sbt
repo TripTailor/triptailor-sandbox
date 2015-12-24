@@ -2,11 +2,16 @@ name := """triptailor-sandbox"""
 version := "1.0"
 scalaVersion := "2.11.7"
 
+val jodaConvertV = "1.7"
 val akkaV        = "2.4.1"
 val akkaStreamsV = "2.0.1"
 val nlpAnalysisV = "3.5.2"
 val ammoniteV    = "0.5.2"
 val scalaTestV   = "2.2.4"
+
+val utilityDependencies = Seq(
+  "org.joda" % "joda-convert" % jodaConvertV
+)
 
 val nlpAnalysisDependencies = Seq(
   "edu.stanford.nlp" % "stanford-corenlp" % nlpAnalysisV,
@@ -28,7 +33,7 @@ val testDependencies = Seq(
 )
 
 libraryDependencies ++=
-  nlpAnalysisDependencies ++ akkaDependencies ++ ammoniteRepl ++ testDependencies
+  utilityDependencies ++ nlpAnalysisDependencies ++ akkaDependencies ++ ammoniteRepl ++ testDependencies
 
 initialCommands in console := """ammonite.repl.Main.run("")"""
 
