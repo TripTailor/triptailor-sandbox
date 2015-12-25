@@ -15,9 +15,9 @@ import scala.collection.JavaConverters._
 import scala.concurrent.Future
 
 trait NLPAnalysisService { self: Common =>
-  val baseYear   = config.getInt("nlp.baseYear")
-  val annotators = config.getStringList("nlp.annotators").asScala.mkString(",")
-  val stopWords  = config.getStringList("nlp.stopWords").asScala.toSet
+  lazy val baseYear   = config.getInt("nlp.baseYear")
+  lazy val annotators = config.getStringList("nlp.annotators").asScala.mkString(",")
+  lazy val stopWords  = config.getStringList("nlp.stopWords").asScala.toSet
 
   val props = new Properties
   props.setProperty("annotators", annotators)

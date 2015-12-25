@@ -22,7 +22,7 @@ trait Setup { self: Common =>
 
   private def toUnratedReview(data: String) = {
     val Seq(date, text @ _*) = data.split(",").toSeq
-    UnratedReview(new LocalDate(date), text.mkString)
+    UnratedReview(new LocalDate(date), text.mkString(","))
   }
 
 }
