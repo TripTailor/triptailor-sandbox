@@ -2,16 +2,18 @@ package co.triptailor.sandbox
 
 import java.io.File
 
+import akka.stream.io.Framing
+import akka.stream.scaladsl._
+import akka.util.ByteString
 import org.joda.time.LocalDate
+
+import scala.util.Random
 
 import scala.concurrent.Future
 
-import akka.stream.SourceShape
-import akka.stream.scaladsl.{ Source, FileIO }
-import akka.stream.io.Framing
-import akka.util.ByteString
-
 trait Setup { self: Common =>
+  val r: Random
+  val nbrStreams: Int
 
   def parseFileReviews(f: File): Source[UnratedReview, Future[Long]] =
     FileIO.fromFile(f)
@@ -19,6 +21,8 @@ trait Setup { self: Common =>
       .map(_.utf8String)
       .drop(1) // Drops CSV headers
       .map(toUnratedReview)
+
+  def split(n: Int) = r.nextInt(nbrStreams) + 1
 
   private def toUnratedReview(data: String) = {
     val Seq(date, text @ _*) = data.split(",").toSeq
