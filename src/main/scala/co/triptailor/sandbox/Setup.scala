@@ -12,8 +12,8 @@ import scala.util.Random
 import scala.concurrent.Future
 
 trait Setup { self: Common =>
-  val r: Random
-  val nbrStreams: Int
+  def gen: Random
+  def nbrStreams: Int
 
   def parseFileReviews(f: File): Source[UnratedReview, Future[Long]] =
     FileIO.fromFile(f)
@@ -22,7 +22,18 @@ trait Setup { self: Common =>
       .drop(1) // Drops CSV headers
       .map(toUnratedReview)
 
-  def split(n: Int) = r.nextInt(nbrStreams) + 1
+  def splitReviewsToFiles =
+    Flow[RatedReview]
+      .map(review => (split(nbrStreams), review))
+      .groupBy(nbrStreams, _._1)
+      .mapAsync(parallelism = nbrStreams) { case (nbr, review) =>
+        Source.single(review).map{ review =>
+          println(review)
+          ByteString(review.toString + "\n")
+        }.runWith(FileIO.toFile(new File(s"$nbr"), append = true))
+      }.mergeSubstreams
+
+  private def split(n: Int) = gen.nextInt(nbrStreams) + 1
 
   private def toUnratedReview(data: String) = {
     val Seq(date, text @ _*) = data.split(",").toSeq
