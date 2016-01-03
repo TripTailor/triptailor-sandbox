@@ -17,7 +17,7 @@ object Main extends Common with Setup with NLPAnalysisService {
   implicit val materializer = ActorMaterializer()
   implicit val ec = ExecutionContext.global
 
-  lazy val config = ConfigFactory.load("nlp")
+  lazy val config = ConfigFactory.load("application")
 
   val gen = new Random(seed = config.getInt("splitFileSeed"))
   val nbrStreams = config.getInt("nbrOfFiles")

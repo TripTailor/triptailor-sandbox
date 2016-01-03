@@ -10,6 +10,6 @@ import scala.concurrent.ExecutionContext
 trait Common {
   implicit def system: ActorSystem
   implicit def materializer: ActorMaterializer
-  implicit val ec: ExecutionContext
+  implicit def ec: ExecutionContext
   def config: Config
 }

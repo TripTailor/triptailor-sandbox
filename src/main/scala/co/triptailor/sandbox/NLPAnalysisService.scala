@@ -39,12 +39,12 @@ trait NLPAnalysisService { self: Common =>
 
         val tokens  = mergeAnnotatedPositionedTokens(ratedSentences.flatMap(_.positionedSentence.tokens))
         val metrics = ratedSentences.map(_.metrics).reduceOption(mergeMetrics) getOrElse Map.empty[String, RatingMetrics]
-        RatedReview(review.text, tokens, metrics, review.date)
+        RatedReview(review.text, tokens, ratedSentences, metrics, review.date)
       }
     }
   }
 
-  protected def mergeMetrics(leftMetrics: Map[String,RatingMetrics], rightMetrics: Map[String,RatingMetrics]) = {
+  private def mergeMetrics(leftMetrics: Map[String,RatingMetrics], rightMetrics: Map[String,RatingMetrics]) = {
     val (lMetrics, rMetrics) =
       if (leftMetrics.size > rightMetrics.size)
         (leftMetrics, rightMetrics)

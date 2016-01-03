@@ -5,9 +5,9 @@ import org.joda.time.LocalDate
 case class UnratedReview(date: LocalDate, text: String)
 
 object Sentiment {
-  val VeryPositive = 2
-  val Positive     = 1
-  val Neutral      = 0
+  val VeryPositive = 3
+  val Positive     = 2
+  val Neutral      = 1
   val Negative     = -1
   val VeryNegative = -2
 
@@ -33,6 +33,9 @@ case class AnnotatedToken(attribute: String, position: Position)
 case class AnnotatedPositionedToken(attribute: String, positions: Seq[Position])
 case class AnnotatedSentence(text: String, tokens: Seq[AnnotatedPositionedToken], sentiment: Int)
 
-case class RatedSentence(positionedSentence: AnnotatedSentence, metrics: Map[String,RatingMetrics])
-case class RatedReview(text: String, tokens: Seq[AnnotatedPositionedToken], metrics: Map[String, RatingMetrics], date: LocalDate)
+case class RatedSentence(positionedSentence: AnnotatedSentence, metrics: Map[String, RatingMetrics])
+case class RatedReview(text: String, tokens: Seq[AnnotatedPositionedToken], sentences: Seq[RatedSentence],
+                       metrics: Map[String, RatingMetrics], date: LocalDate)
 case class RatedDocument(reviews: Seq[RatedReview], metrics: Map[String, RatingMetrics])
+
+case class ClassifiedDocument(document: RatedDocument, rating: Double)
