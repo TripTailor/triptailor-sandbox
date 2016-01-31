@@ -51,7 +51,8 @@ trait Setup { self: Common with ClassificationService =>
 
   private def editDocument(doc: ClassifiedDocument) = {
     def editReview(r: RatedReview) = Seq(r.date.toString(), r.text).mkString("|")
-    doc.document.reviews.map(editReview).mkString("\n-----------\n")
+    val reviewsText = doc.document.reviews.map(editReview).mkString("\n-----------\n")
+    Seq(doc.rating, reviewsText).mkString("\n===============\n")
   }
 
 }
