@@ -4,14 +4,12 @@ import java.io.File
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import akka.stream.scaladsl._
-import akka.util.ByteString
 import com.typesafe.config.ConfigFactory
 
 import scala.concurrent.ExecutionContext
-import scala.util.{Failure, Success, Random}
+import scala.util.{Failure, Random, Success}
 
-object Main extends Common with Setup with NLPAnalysisService {
+object Main extends Common with ClassificationService with Setup with NLPAnalysisService {
 
   implicit val system = ActorSystem("triptailor-sandbox-system")
   implicit val materializer = ActorMaterializer()
@@ -25,17 +23,19 @@ object Main extends Common with Setup with NLPAnalysisService {
   def main(args: Array[String]): Unit = {
     parseFileReviews(new File(config.getString("nlp.reviewsFile")))
       .via(produceRatedReviews)
-      .via(splitReviewsToFiles)
+      .via(splitReviewsIntoDocuments)
+      .via(classifyDocuments)
       .runForeach(println) onComplete {
-        case Success(v) =>
-          println("Done rating reviews")
-          system.terminate()
-        case Failure(e) =>
-          println(e.getClass)
-          println(e.getMessage)
-          println(e.getStackTrace.mkString("\n"))
-          system.terminate()
-      }
+      case Success(v) =>
+        println("Done rating review & splittin into documents")
+        system.terminate()
+      case Failure(e) =>
+        println(e.getClass)
+        println(e.getMessage)
+        println(e.getStackTrace.mkString("\n"))
+        system.terminate()
+    }
+
   }
 
 }

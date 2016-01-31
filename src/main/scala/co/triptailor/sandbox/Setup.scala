@@ -7,11 +7,10 @@ import akka.stream.scaladsl._
 import akka.util.ByteString
 import org.joda.time.LocalDate
 
+import scala.concurrent.Future
 import scala.util.Random
 
-import scala.concurrent.Future
-
-trait Setup { self: Common =>
+trait Setup { self: Common with ClassificationService =>
   def gen: Random
   def nbrStreams: Int
 
@@ -22,22 +21,37 @@ trait Setup { self: Common =>
       .drop(1) // Drops CSV headers
       .map(toUnratedReview)
 
-  def splitReviewsToFiles =
+  def splitReviewsIntoDocuments =
     Flow[RatedReview]
       .map(review => (split(nbrStreams), review))
-      .groupBy(nbrStreams, _._1)
-      .mapAsync(parallelism = nbrStreams) { case (nbr, review) =>
-        Source.single(review).map{ review =>
-          println(review)
-          ByteString(review.toString + "\n")
-        }.runWith(FileIO.toFile(new File(s"$nbr"), append = true))
-      }.mergeSubstreams
+      .fold(Map.empty[Int, RatedDocument]) { case (mappings, (nbr, review)) =>
+        // TODO: Merge rating metrics
+        val document = mappings.getOrElse(nbr, RatedDocument(Seq(), Map()))
+        mappings.updated(nbr, document.copy(reviews = document.reviews :+ review, metrics = review.metrics))
+      }
+      .map(_.values.toSeq)
+
+  def classifyDocuments =
+    Flow[Seq[RatedDocument]]
+      .map(classifyByTags)
+      .map(_.zipWithIndex)
+      .mapConcat(_.to[collection.immutable.Seq])
+      .mapAsync(parallelism = nbrStreams) { case (classifiedDoc, idx) =>
+        Source.single(classifiedDoc).map { doc =>
+          ByteString(editDocument(doc))
+        }.runWith(FileIO.toFile(new File(s"${idx + 1}")))
+      }
 
   private def split(n: Int) = gen.nextInt(nbrStreams) + 1
 
   private def toUnratedReview(data: String) = {
     val Seq(date, text @ _*) = data.split(",").toSeq
     UnratedReview(new LocalDate(date), text.mkString(","))
+  }
+
+  private def editDocument(doc: ClassifiedDocument) = {
+    def editReview(r: RatedReview) = Seq(r.date.toString(), r.text).mkString("|")
+    doc.document.reviews.map(editReview).mkString("\n-----------\n")
   }
 
 }

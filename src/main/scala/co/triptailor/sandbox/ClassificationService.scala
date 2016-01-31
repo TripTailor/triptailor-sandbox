@@ -1,5 +1,7 @@
 package co.triptailor.sandbox
 
+import scala.collection.JavaConverters._
+
 /**
   * csen = (cfreq * sen) / freq
   *
@@ -17,17 +19,14 @@ trait ClassificationService { self: Common =>
   type Model = Seq[RatedDocument]
 
   val classificationNormalizer = config.getDouble("classification.classificationNormalizer")
+  /** Used to draw comparison with model **/
+  val tags = config.getStringList("classification.tags").asScala
 
   /**
-    * doc: Individual document taken from model
-    * shared_tar: Shared tags attributes with ratings with respect to m
-    * unique_mar: Unique model attributes with ratings with respect to m
-    *
-    * @param m collection of documents used to compare with H
-    * @param tags tags used to draw comparison with m
-    * @return ordered collection of ClassifiedDocument
+    * @param m collection of documents
+    * @return ordered collection of `ClassifiedDocument`
     */
-  def classifyByTags(m: Model, tags: Seq[String]): Seq[ClassifiedDocument] = {
+  def classifyByTags(m: Model): Seq[ClassifiedDocument] = {
     val avdl = compute_avdl(m, tags)
 
     (for {
