@@ -60,5 +60,5 @@ trait ClassificationService { self: Common =>
 
 object ClassificationService {
   private implicit val classifiedDocumentAscending: Ordering[ClassifiedDocument] =
-    Ordering.by[ClassifiedDocument, Double](_.rating)
+    Ordering.by[ClassifiedDocument, Double](-_.rating)
 }
