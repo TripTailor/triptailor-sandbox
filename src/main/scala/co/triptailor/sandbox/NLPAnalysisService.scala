@@ -38,8 +38,9 @@ trait NLPAnalysisService { self: Common =>
         val ratedSentences   = rateSentences(unratedSentences, review.date.toString("yyyy").toDouble)
 
         val tokens  = mergeAnnotatedPositionedTokens(ratedSentences.flatMap(_.positionedSentence.tokens))
+        val sentiments = ratedSentences.map(_.positionedSentence.sentiment)
         val metrics = ratedSentences.map(_.metrics).reduceOption(mergeMetrics) getOrElse Map.empty[String, RatingMetrics]
-        RatedReview(review.text, tokens, ratedSentences, metrics, review.date)
+        RatedReview(review.text, tokens, ratedSentences, metrics, review.date, sentiments)
       }
     }
   }

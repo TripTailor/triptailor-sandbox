@@ -35,7 +35,7 @@ case class AnnotatedSentence(text: String, tokens: Seq[AnnotatedPositionedToken]
 
 case class RatedSentence(positionedSentence: AnnotatedSentence, metrics: Map[String, RatingMetrics])
 case class RatedReview(text: String, tokens: Seq[AnnotatedPositionedToken], sentences: Seq[RatedSentence],
-                       metrics: Map[String, RatingMetrics], date: LocalDate)
+                       metrics: Map[String, RatingMetrics], date: LocalDate, sentiments: Seq[Int])
 case class RatedDocument(reviews: Seq[RatedReview], metrics: Map[String, RatingMetrics])
 
 case class ClassifiedDocument(document: RatedDocument, rating: Double)
