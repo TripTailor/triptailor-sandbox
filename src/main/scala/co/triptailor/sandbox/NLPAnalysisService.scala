@@ -25,7 +25,7 @@ trait NLPAnalysisService { self: Common =>
   val pipeline = new StanfordCoreNLP(props)
 
   def produceRatedReviews: Flow[UnratedReview, RatedReview, Unit] =
-    Flow[UnratedReview].mapAsyncUnordered(parallelism = Runtime.getRuntime.availableProcessors() + 1)(rateReview)
+    Flow[UnratedReview].mapAsync(parallelism = Runtime.getRuntime.availableProcessors() + 1)(rateReview)
 
   private def rateReview(review: UnratedReview): Future[RatedReview] = {
     val unratedReview = new Annotation(review.text)
