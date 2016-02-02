@@ -10,7 +10,7 @@ import org.joda.time.LocalDate
 import scala.concurrent.Future
 import scala.util.Random
 
-trait Setup { self: Common with ClassificationService =>
+trait Setup { self: Common with NLPAnalysisService with ClassificationService =>
   def gen: Random
   def nbrStreams: Int
 
@@ -25,9 +25,10 @@ trait Setup { self: Common with ClassificationService =>
     Flow[RatedReview]
       .map(review => (split(nbrStreams), review))
       .fold(Map.empty[Int, RatedDocument]) { case (mappings, (nbr, review)) =>
-        // TODO: Merge rating metrics
         val document = mappings.getOrElse(nbr, RatedDocument(Seq(), Map()))
-        mappings.updated(nbr, document.copy(reviews = document.reviews :+ review, metrics = review.metrics))
+        mappings.updated(
+          nbr,
+          document.copy(reviews = document.reviews :+ review, metrics = mergeMetrics(document.metrics, review.metrics)))
       }
       .map(_.values.toSeq)
 

@@ -45,7 +45,7 @@ trait NLPAnalysisService { self: Common =>
     }
   }
 
-  private def mergeMetrics(leftMetrics: Map[String,RatingMetrics], rightMetrics: Map[String,RatingMetrics]) = {
+  def mergeMetrics(leftMetrics: Map[String,RatingMetrics], rightMetrics: Map[String,RatingMetrics]) = {
     val (lMetrics, rMetrics) =
       if (leftMetrics.size > rightMetrics.size)
         (leftMetrics, rightMetrics)
