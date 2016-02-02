@@ -8,6 +8,7 @@ import scala.collection.JavaConverters._
   * BM25 Model
   * rating = csen / (0.25 + 0.75(dl/avdl))
   *
+  * b      - classification normalizer
   * rating - computed rating for a document based on tags that match query
   * csen   - computed sentiment for a document
   * dl     - document length (number of tags that match query)
@@ -18,7 +19,7 @@ trait ClassificationService { self: Common =>
 
   type Model = Seq[RatedDocument]
 
-  val classificationNormalizer = config.getDouble("classification.classificationNormalizer")
+  val b = config.getDouble("classification.classificationNormalizer")
   /** Used to draw comparison with model **/
   val tags = config.getStringList("classification.tags").asScala
 
@@ -32,12 +33,12 @@ trait ClassificationService { self: Common =>
     (for {
       doc  ← m
       csen = compute_csen(doc, tags)
-      dl   = compute_dl(doc, tags)
+      dl   = compute_dl(doc)
     } yield ClassifiedDocument(doc, rating = compute_bm25(csen, dl, avdl))).sorted
   }
 
   private def compute_bm25(csen: Double, dl: Double, avdl: Double): Double =
-    csen / (classificationNormalizer + 0.75 * (dl / avdl))
+    csen / (1 - b + 0.75 * (dl / avdl))
 
   private def compute_csen(doc: RatedDocument, tags: Seq[String]): Double =
     tags.flatMap(doc.metrics.get).foldLeft( 0d ) { (csens, metrics) =>
@@ -45,16 +46,13 @@ trait ClassificationService { self: Common =>
     }
 
   private def compute_avdl(m: Model, tags: Seq[String]): Double =
-    tags.size / m.foldLeft( 0d )(_ + compute_dl(_, tags))
+    m.foldLeft( 0d )(_ + compute_dl(_)) / m.size
 
-  private def compute_dl(doc: RatedDocument, tags: Seq[String]): Double = {
-    def metricsContainsTag(tags: Seq[String])(tuple: (String, _)) = tags.contains(tuple._1)
-
+  private def compute_dl(doc: RatedDocument): Double =
     (for {
       review   ← doc.reviews
       sentence ← review.sentences
-    } yield sentence.metrics.count(metricsContainsTag(tags))).foldLeft( 0d )(_ + _)
-  }
+    } yield sentence.metrics.keys.size).sum
 
 }
 
