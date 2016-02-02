@@ -15,12 +15,17 @@ import scala.collection.JavaConverters._
 import scala.concurrent.Future
 
 trait NLPAnalysisService { self: Common =>
-  lazy val baseYear   = config.getInt("nlp.baseYear")
-  lazy val annotators = config.getStringList("nlp.annotators").asScala.mkString(",")
-  lazy val stopWords  = config.getStringList("nlp.stopWords").asScala.toSet
+  lazy val baseYear               = config.getInt("nlp.baseYear")
+  lazy val annotators             = config.getStringList("nlp.annotators").asScala.mkString(",")
+  lazy val stopWords              = config.getStringList("nlp.stopWords").asScala.toSet
+  lazy val tokenBoundariesRegex   = config.getStringList("nlp.tokenBoundaries").asScala.mkString("(?:", ")|(?:", ")")
+  lazy val boundaryTokenRegex     = "(?i)\\.|[!?]+|" + tokenBoundariesRegex
+  lazy val tokenPatternsToDiscard = "(?i)" + tokenBoundariesRegex
 
   val props = new Properties
   props.setProperty("annotators", annotators)
+  props.setProperty("ssplit.boundaryTokenRegex", boundaryTokenRegex)
+  props.setProperty("ssplit.tokenPatternsToDiscard", tokenPatternsToDiscard)
 
   val pipeline = new StanfordCoreNLP(props)
 
