@@ -6,7 +6,7 @@ import scala.collection.JavaConverters._
   * csen = (cfreq * sen) / freq
   *
   * BM25 Model
-  * rating = csen / (0.25 + 0.75(dl/avdl))
+  * rating = csen / (1-b + b(dl/avdl))
   *
   * b      - classification normalizer
   * rating - computed rating for a document based on tags that match query
@@ -38,7 +38,7 @@ trait ClassificationService { self: Common =>
   }
 
   private def compute_bm25(csen: Double, dl: Double, avdl: Double): Double =
-    csen / (1 - b + 0.75 * (dl / avdl))
+    csen / (1 - b + b * (dl / avdl))
 
   private def compute_csen(doc: RatedDocument, tags: Seq[String]): Double =
     tags.flatMap(doc.metrics.get).foldLeft( 0d ) { (csens, metrics) =>
