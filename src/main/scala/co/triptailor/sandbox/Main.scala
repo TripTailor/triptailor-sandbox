@@ -9,7 +9,7 @@ import com.typesafe.config.ConfigFactory
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Random, Success}
 
-object Main extends Common with ClassificationService with Setup with NLPAnalysisService {
+object Main extends Common with Setup with NLPAnalysisService with ClassificationService {
 
   implicit val system = ActorSystem("triptailor-sandbox-system")
   implicit val materializer = ActorMaterializer()
