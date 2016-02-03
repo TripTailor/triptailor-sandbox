@@ -18,7 +18,7 @@ object Main extends Common with ClassificationService with Setup with NLPAnalysi
   lazy val config = ConfigFactory.load("application")
 
   val gen = new Random(seed = config.getInt("splitFileSeed"))
-  val nbrStreams = config.getInt("nbrOfFiles")
+  val modelSize = config.getInt("modelSize")
 
   def main(args: Array[String]): Unit = {
     parseFileReviews(new File(config.getString("nlp.reviewsFile")))

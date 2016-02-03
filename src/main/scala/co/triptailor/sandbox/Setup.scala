@@ -12,7 +12,7 @@ import scala.util.Random
 
 trait Setup { self: Common with NLPAnalysisService with ClassificationService =>
   def gen: Random
-  def nbrStreams: Int
+  def modelSize: Int
 
   def parseFileReviews(f: File): Source[UnratedReview, Future[Long]] =
     FileIO.fromFile(f)
@@ -23,7 +23,7 @@ trait Setup { self: Common with NLPAnalysisService with ClassificationService =>
 
   def splitReviewsIntoDocuments =
     Flow[RatedReview]
-      .map(review => (split(nbrStreams), review))
+      .map(review => (split(modelSize), review))
       .fold(Map.empty[Int, RatedDocument]) { case (mappings, (nbr, review)) =>
         val document = mappings.getOrElse(nbr, RatedDocument(Seq(), Map()))
         mappings.updated(
@@ -37,13 +37,13 @@ trait Setup { self: Common with NLPAnalysisService with ClassificationService =>
       .map(classifyByTags)
       .map(_.zipWithIndex)
       .mapConcat(_.to[collection.immutable.Seq])
-      .mapAsync(parallelism = nbrStreams) { case (classifiedDoc, idx) =>
+      .mapAsync(parallelism = modelSize) { case (classifiedDoc, idx) =>
         Source.single(classifiedDoc).map { doc =>
           ByteString(editDocument(doc))
         }.runWith(FileIO.toFile(new File(s"${idx + 1}")))
       }
 
-  private def split(n: Int) = gen.nextInt(nbrStreams) + 1
+  private def split(n: Int) = gen.nextInt(modelSize) + 1
 
   private def toUnratedReview(data: String) = {
     val Seq(date, text @ _*) = data.split(",").toSeq
