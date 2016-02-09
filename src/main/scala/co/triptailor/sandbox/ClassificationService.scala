@@ -32,28 +32,20 @@ trait ClassificationService { self: Common =>
 
     (for {
       doc  ← m
-      csen = compute_csen(doc, tags)
       dl   = compute_dl(doc)
-    } yield ClassifiedDocument(doc, rating = compute_bm25(csen, dl, avdl))).sorted
+    } yield ClassifiedDocument(doc, rating = compute_bm25(doc, tags, dl, avdl))).sorted
   }
 
-  private def compute_bm25(csen: Double, dl: Double, avdl: Double): Double =
-    csen / (1 - b + b * (dl / avdl))
-
-  private def compute_csen(doc: RatedDocument, tags: Seq[String]): Double =
-    tags.flatMap(doc.metrics.get).foldLeft( 0d ) { (csens, metrics) =>
-      csens + (metrics.cfreq * metrics.sentiment) / metrics.freq
+  private def compute_bm25(doc: RatedDocument, tags: Seq[String], dl: Double, avdl: Double): Double =
+    tags.flatMap(doc.metrics.get).foldLeft( 0d ) { (rating, metrics) =>
+      rating + (metrics.cfreq * metrics.sentiment) / (metrics.freq * (1 - b + b * (dl / avdl)))
     }
 
   private def compute_avdl(m: Model, tags: Seq[String]): Double =
     m.foldLeft( 0d )(_ + compute_dl(_)) / m.size
 
   private def compute_dl(doc: RatedDocument): Double =
-    (for {
-      review   ← doc.reviews
-      sentence ← review.sentences
-    } yield sentence.metrics.keys.size).sum
-
+    doc.metrics.map(_._2.freq).sum
 }
 
 object ClassificationService {
