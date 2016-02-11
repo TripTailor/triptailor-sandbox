@@ -40,7 +40,7 @@ trait Setup { self: Common with NLPAnalysisService with ClassificationService =>
       .mapAsync(parallelism = modelSize) { case (classifiedDoc, idx) =>
         Source.single(classifiedDoc).map { doc =>
           ByteString(editDocument(doc))
-        }.runWith(FileIO.toFile(new File(s"${idx + 1}")))
+        }.runWith(FileIO.toFile(new File(s"${idx + 1}.csv")))
       }
 
   private def split(n: Int) = gen.nextInt(modelSize) + 1
@@ -52,9 +52,10 @@ trait Setup { self: Common with NLPAnalysisService with ClassificationService =>
 
   private def editDocument(doc: ClassifiedDocument) = {
     def sentimentAvg(ss: Seq[Int]) = ss.sum / (ss.size * 1.0)
-    def editReview(r: RatedReview) = Seq(r.date.toString(), r.sentiments.mkString(", "), sentimentAvg(r.sentiments), r.text).mkString(" | ")
-    val reviewsText = doc.document.reviews.map(editReview).mkString("\n-----------\n")
-    Seq(doc.rating, reviewsText).mkString("\n===============\n")
+    def editSentence(s: RatedSentence) = Seq(s.positionedSentence.sentiment,
+        "\"" + s.positionedSentence.text.replaceAll("(\\\\r|\\\\n)", "") + "\"").mkString(",")
+    def editReview(r: RatedReview) = r.sentences.map(editSentence).mkString("\n")
+    doc.document.reviews.map(editReview).mkString("\n")
   }
 
 }
