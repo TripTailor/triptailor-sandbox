@@ -10,6 +10,8 @@ import org.joda.time.LocalDate
 import scala.concurrent.Future
 import scala.util.Random
 
+import scala.collection.JavaConverters._
+
 trait Setup { self: Common with NLPAnalysisService with ClassificationService =>
   def gen: Random
   def modelSize: Int
@@ -51,10 +53,19 @@ trait Setup { self: Common with NLPAnalysisService with ClassificationService =>
   }
 
   private def editDocument(doc: ClassifiedDocument) = {
-    def sentimentAvg(ss: Seq[Int]) = ss.sum / (ss.size * 1.0)
-    def editReview(r: RatedReview) = Seq(r.date.toString(), r.sentiments.mkString(", "), sentimentAvg(r.sentiments), r.text).mkString(" | ")
-    val reviewsText = doc.document.reviews.map(editReview).mkString("\n-----------\n")
-    Seq(doc.rating, reviewsText).mkString("\n===============\n")
+    val tags = config.getStringList("classification.tags").asScala
+    
+    val tagSentiments = doc.ratedTags.map(tag => tag.attribute + ":" + tag.rating).mkString("\n")
+    
+    def reviewContainsTag(r: RatedReview) =
+      r.metrics.foldLeft(false)((contains, metric) => contains || tags.contains(metric._1))
+    def tokenSentiments(metrics: Map[String, RatingMetrics]) =
+      metrics.filter(token => tags.contains(token._1)).map(tag => tag._1 + ":" + tag._2.sentiment)
+    def editReview(r: RatedReview) =
+      Seq(r.date.toString(), tokenSentiments(r.metrics).mkString(","), r.text).mkString(" | ")
+    val reviewsText = doc.document.reviews.filter(reviewContainsTag).map(editReview).mkString("\n-----------\n")
+    
+    Seq(doc.rating, tagSentiments, reviewsText).mkString("\n===============\n")
   }
 
 }

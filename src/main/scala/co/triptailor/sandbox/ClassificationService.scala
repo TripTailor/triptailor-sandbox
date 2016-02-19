@@ -33,19 +33,32 @@ trait ClassificationService { self: Common =>
     (for {
       doc  ← m
       dl   = compute_dl(doc)
-    } yield ClassifiedDocument(doc, rating = compute_bm25(doc, tags, dl, avdl))).sorted
+      ratedTags = rateTags(doc.metrics, tags, dl, avdl)
+    } yield ClassifiedDocument(doc, rating = compute_bm25(ratedTags, tags, dl, avdl), ratedTags)).sorted
   }
 
-  private def compute_bm25(doc: RatedDocument, tags: Seq[String], dl: Double, avdl: Double): Double =
-    tags.flatMap(doc.metrics.get).foldLeft( 0d ) { (rating, metrics) =>
-      rating + (metrics.cfreq * metrics.sentiment) / (metrics.freq * (1 - b + b * (dl / avdl)))
+  private def compute_bm25(ratedTags: Seq[RatedTag], tags: Seq[String], dl: Double, avdl: Double): Double =
+    ratedTags.foldLeft( 0d ) { (rating, token) =>
+      rating + token.rating
     }
+  
+  private def rateTags(metrics: Map[String, RatingMetrics], tags: Seq[String], dl: Double, avdl: Double) = {
+    val filteredMetrics = getMetricsOfTags(tags, metrics)
+    filteredMetrics.map { token =>
+      val tokenStr = token._1
+      val metrics = token._2
+      RatedTag(tokenStr, (metrics.cfreq * metrics.sentiment) / (metrics.freq * (1 - b + b * (dl / avdl))))
+    }.toSeq
+  }
 
   private def compute_avdl(m: Model, tags: Seq[String]): Double =
     m.foldLeft( 0d )(_ + compute_dl(_)) / m.size
 
   private def compute_dl(doc: RatedDocument): Double =
     doc.metrics.map(_._2.freq).sum
+    
+  private def getMetricsOfTags(tags: Seq[String], metrics: Map[String, RatingMetrics]) =
+    metrics.filter(token => tags.contains(token._1))
 }
 
 object ClassificationService {
