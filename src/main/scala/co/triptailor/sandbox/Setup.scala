@@ -13,12 +13,14 @@ import scala.util.Random
 trait Setup { self: Common with NLPAnalysisService with ClassificationService =>
   def gen: Random
   def modelSize: Int
+  def nbrReviews: Int
 
   def parseFileReviews(f: File): Source[UnratedReview, Future[Long]] =
     FileIO.fromFile(f)
       .via(Framing.delimiter(ByteString(System.lineSeparator), maximumFrameLength = Int.MaxValue, allowTruncation = true))
       .map(_.utf8String)
       .drop(1) // Drops CSV headers
+      .take(nbrReviews)
       .map(toUnratedReview)
 
   def splitReviewsIntoDocuments =

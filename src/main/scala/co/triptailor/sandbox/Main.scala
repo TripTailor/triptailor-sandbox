@@ -19,6 +19,7 @@ object Main extends Common with Setup with NLPAnalysisService with Classificatio
 
   val gen = new Random(seed = config.getInt("splitFileSeed"))
   val modelSize = config.getInt("modelSize")
+  val nbrReviews = config.getInt("nbrReviews")
 
   def main(args: Array[String]): Unit = {
     parseFileReviews(new File(config.getString("nlp.reviewsFile")))
