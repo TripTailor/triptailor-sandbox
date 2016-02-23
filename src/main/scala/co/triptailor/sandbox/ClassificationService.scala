@@ -44,10 +44,8 @@ trait ClassificationService { self: Common =>
   
   private def rateTags(metrics: Map[String, RatingMetrics], tags: Seq[String], dl: Double, avdl: Double) = {
     val filteredMetrics = getMetricsOfTags(tags, metrics)
-    filteredMetrics.map { token =>
-      val tokenStr = token._1
-      val metrics = token._2
-      RatedTag(tokenStr, (metrics.cfreq * metrics.sentiment) / (metrics.freq * (1 - b + b * (dl / avdl))))
+    filteredMetrics.map { case (tag, metrics) =>
+      RatedTag(tag, (metrics.cfreq * metrics.sentiment) / (metrics.freq * (1 - b + b * (dl / avdl))))
     }.toSeq
   }
 

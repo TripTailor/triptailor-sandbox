@@ -60,7 +60,7 @@ trait Setup { self: Common with NLPAnalysisService with ClassificationService =>
     def reviewContainsTag(r: RatedReview) =
       r.metrics.foldLeft(false)((contains, metric) => contains || tags.contains(metric._1))
     def tokenSentiments(metrics: Map[String, RatingMetrics]) =
-      metrics.filter(token => tags.contains(token._1)).map(tag => tag._1 + ":" + tag._2.sentiment)
+      metrics.filter(token => tags.contains(token._1)).map{case (tag, metrics) => tag + ":" + metrics.sentiment}
     def editReview(r: RatedReview) =
       Seq(r.date.toString(), tokenSentiments(r.metrics).mkString(","), r.text).mkString(" | ")
     val reviewsText = doc.document.reviews.filter(reviewContainsTag).map(editReview).mkString("\n-----------\n")
