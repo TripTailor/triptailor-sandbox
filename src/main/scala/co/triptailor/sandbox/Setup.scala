@@ -14,6 +14,7 @@ import scala.collection.JavaConverters._
 
 trait Setup { self: Common with NLPAnalysisService with ClassificationService =>
   def gen: Random
+  def reviewGen: Random
   def modelSize: Int
   def nbrReviews: Int
   def occurrence: Double
@@ -30,24 +31,17 @@ trait Setup { self: Common with NLPAnalysisService with ClassificationService =>
     Flow[UnratedReview]
       .fold(Map(true -> Seq[UnratedReview](), false -> Seq[UnratedReview]()))((reviewPartition, review) => {
         val contains = reviewContainsTags(review)
-        val currentOccur = reviewPartition(contains).size.toDouble / nbrReviews.toDouble
-        
-        if(contains && currentOccur < occurrence) {
-          reviewPartition.updated(
-            contains,
-            reviewPartition(contains) :+ review
-          )
-        }
-        else if(!contains && currentOccur < (1 - occurrence)) {
-          reviewPartition.updated(
-            contains,
-            reviewPartition(contains) :+ review
-          )
-        }
-        else
-          reviewPartition
+        reviewPartition.updated(
+          contains,
+          reviewPartition(contains) :+ review
+        )
       })
-      .map(_.values.flatten.to[collection.immutable.Seq])
+      .map(partition => {
+        val occurrencePartition = reviewGen.shuffle(partition(true)).take((occurrence * nbrReviews).toInt)
+        val notOccurrencePartition = reviewGen.shuffle(partition(false)).take(nbrReviews - occurrencePartition.size)
+        
+        (occurrencePartition ++ notOccurrencePartition).to[collection.immutable.Seq]
+      })
       .mapConcat(x => x)
 
   def splitReviewsIntoDocuments =
@@ -73,7 +67,6 @@ trait Setup { self: Common with NLPAnalysisService with ClassificationService =>
       }
 
   private def split(n: Int) = gen.nextInt(modelSize) + 1
-  private def reviewSplit = Random.nextInt(nbrReviews)
 
   private def toUnratedReview(data: String) = {
     val Seq(date, text @ _*) = data.split(",").toSeq

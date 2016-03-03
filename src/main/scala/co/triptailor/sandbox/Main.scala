@@ -17,7 +17,8 @@ object Main extends Common with Setup with NLPAnalysisService with Classificatio
 
   lazy val config = ConfigFactory.load("application")
 
-  val gen = new Random(seed = config.getInt("splitFileSeed"))
+  val gen = new Random(seed = config.getInt("randomSeed"))
+  val reviewGen = new Random(seed = config.getInt("randomSeed"))
   val modelSize = config.getInt("modelSize")
   val nbrReviews = config.getInt("nbrReviews")
   val occurrence = config.getDouble("occurrence")
