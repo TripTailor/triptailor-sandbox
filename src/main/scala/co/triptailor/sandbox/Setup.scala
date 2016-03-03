@@ -81,13 +81,11 @@ trait Setup { self: Common with NLPAnalysisService with ClassificationService =>
   private def editDocument(doc: ClassifiedDocument) = {  
     val tagSentiments = doc.ratedTags.map(tag => tag.attribute + ":" + tag.rating).mkString("\n")
     
-    def ratedReviewContainsTag(r: RatedReview) =
-      r.metrics.foldLeft(false)((contains, metric) => contains || tags.contains(metric._1))
     def tokenSentiments(metrics: Map[String, RatingMetrics]) =
       metrics.filter(token => tags.contains(token._1)).map{case (tag, metrics) => tag + ":" + metrics.sentiment}
     def editReview(r: RatedReview) =
       Seq(r.date.toString(), tokenSentiments(r.metrics).mkString(","), r.text).mkString(" | ")
-    val reviewsText = doc.document.reviews.filter(ratedReviewContainsTag).map(editReview).mkString("\n-----------\n")
+    val reviewsText = doc.document.reviews.map(editReview).mkString("\n-----------\n")
     
     Seq(doc.rating, tagSentiments, reviewsText).mkString("\n===============\n")
   }
