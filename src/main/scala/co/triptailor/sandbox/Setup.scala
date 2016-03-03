@@ -14,7 +14,6 @@ import scala.collection.JavaConverters._
 
 trait Setup { self: Common with NLPAnalysisService with ClassificationService =>
   def gen: Random
-  def reviewGen: Random
   def modelSize: Int
   def nbrReviews: Int
   def occurrence: Double
@@ -27,7 +26,7 @@ trait Setup { self: Common with NLPAnalysisService with ClassificationService =>
       .drop(1) // Drops CSV headers
       .map(toUnratedReview)
       
-  def pickNReviews =
+  def pickNRandomReviews =
     Flow[UnratedReview]
       .fold(Map(true -> Seq[UnratedReview](), false -> Seq[UnratedReview]()))((reviewPartition, review) => {
         val contains = reviewContainsTags(review)
@@ -37,8 +36,8 @@ trait Setup { self: Common with NLPAnalysisService with ClassificationService =>
         )
       })
       .map(partition => {
-        val occurrencePartition = reviewGen.shuffle(partition(true)).take((occurrence * nbrReviews).toInt)
-        val notOccurrencePartition = reviewGen.shuffle(partition(false)).take(nbrReviews - occurrencePartition.size)
+        val occurrencePartition = Random.shuffle(partition(true)).take((occurrence * nbrReviews).toInt)
+        val notOccurrencePartition = Random.shuffle(partition(false)).take(nbrReviews - occurrencePartition.size)
         
         (occurrencePartition ++ notOccurrencePartition).to[collection.immutable.Seq]
       })
