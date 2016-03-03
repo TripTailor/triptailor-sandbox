@@ -79,7 +79,13 @@ trait Setup { self: Common with NLPAnalysisService with ClassificationService =>
     })
 
   private def editDocument(doc: ClassifiedDocument) = {  
-    val tagSentiments = doc.ratedTags.map(tag => tag.attribute + ":" + tag.rating).mkString("\n")
+    val docInformation = doc.rating + "\nn: " + doc.document.metrics.foldLeft(0){ case (sum, (tag, metrics)) =>
+        sum + metrics.freq.toInt
+    }
+    
+    val tagRatings = doc.ratedTags.map(tag => {
+      tag.attribute + ": " + tag.rating + " - " + doc.document.metrics(tag.attribute).freq.toInt
+    }).mkString("\n")
     
     def tokenSentiments(metrics: Map[String, RatingMetrics]) =
       metrics.filter(token => tags.contains(token._1)).map{case (tag, metrics) => tag + ":" + metrics.sentiment}
@@ -87,7 +93,7 @@ trait Setup { self: Common with NLPAnalysisService with ClassificationService =>
       Seq(r.date.toString(), tokenSentiments(r.metrics).mkString(","), r.text).mkString(" | ")
     val reviewsText = doc.document.reviews.map(editReview).mkString("\n-----------\n")
     
-    Seq(doc.rating, tagSentiments, reviewsText).mkString("\n===============\n")
+    Seq(docInformation, tagRatings, reviewsText).mkString("\n===============\n")
   }
 
 }
