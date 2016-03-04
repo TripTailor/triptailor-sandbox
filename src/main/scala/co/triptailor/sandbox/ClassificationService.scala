@@ -21,7 +21,7 @@ trait ClassificationService { self: Common =>
 
   val b = config.getDouble("classification.classificationNormalizer")
   /** Used to draw comparison with model **/
-  val tags = config.getStringList("classification.tags").asScala
+  val tags = config.getStringList("classification.tags").asScala.toSet
 
   /**
     * @param m collection of documents
@@ -37,25 +37,25 @@ trait ClassificationService { self: Common =>
     } yield ClassifiedDocument(doc, rating = compute_bm25(ratedTags, tags, dl, avdl), ratedTags)).sorted
   }
 
-  private def compute_bm25(ratedTags: Seq[RatedTag], tags: Seq[String], dl: Double, avdl: Double): Double =
+  private def compute_bm25(ratedTags: Seq[RatedTag], tags: Set[String], dl: Double, avdl: Double): Double =
     ratedTags.foldLeft( 0d ) { (rating, token) =>
       rating + token.rating
     }
   
-  private def rateTags(metrics: Map[String, RatingMetrics], tags: Seq[String], dl: Double, avdl: Double) = {
-    val filteredMetrics = getMetricsOfTags(tags, metrics)
+  private def rateTags(ratingMetrics: Map[String, RatingMetrics], tags: Set[String], dl: Double, avdl: Double) = {
+    val filteredMetrics = getMetricsOfTags(tags, ratingMetrics)
     filteredMetrics.map { case (tag, metrics) =>
       RatedTag(tag, (metrics.cfreq * metrics.sentiment) / (metrics.freq * (1 - b + b * (dl / avdl))))
     }.toSeq
   }
 
-  private def compute_avdl(m: Model, tags: Seq[String]): Double =
+  private def compute_avdl(m: Model, tags: Set[String]): Double =
     m.foldLeft( 0d )(_ + compute_dl(_)) / m.size
 
   private def compute_dl(doc: RatedDocument): Double =
     doc.metrics.map(_._2.freq).sum
     
-  private def getMetricsOfTags(tags: Seq[String], metrics: Map[String, RatingMetrics]) =
+  private def getMetricsOfTags(tags: Set[String], metrics: Map[String, RatingMetrics]) =
     metrics.filter(token => tags.contains(token._1))
 }
 

@@ -15,7 +15,6 @@ trait Setup { self: Common with NLPAnalysisService with ClassificationService =>
   def modelSize: Int
   def nbrReviews: Int
   def occurrence: Double
-  def tags: Seq[String]
 
   def parseFileReviews(f: File): Source[UnratedReview, Future[Long]] =
     FileIO.fromFile(f)
@@ -24,27 +23,20 @@ trait Setup { self: Common with NLPAnalysisService with ClassificationService =>
       .drop(1) // Drops CSV headers
       .map(toUnratedReview)
       
-  def pickNRandomReviews =
+  def matchModelOccurrence =
     Flow[UnratedReview]
-      .fold(Map(true -> Seq[UnratedReview](), false -> Seq[UnratedReview]()))((reviewPartition, review) => {
-        val contains = reviewContainsTags(review)
-        reviewPartition.updated(
-          contains,
-          reviewPartition(contains) :+ review
-        )
-      })
-      .map(partition => {
-        val occurrencePartition = gen.shuffle(partition(true)).take((occurrence * nbrReviews).toInt)
-        val notOccurrencePartition = gen.shuffle(partition(false)).take(nbrReviews - occurrencePartition.size)
+      .fold((Seq.empty[UnratedReview], Seq.empty[UnratedReview])) {
+        case ((matches, nonMatches), review) if tags.exists(review.text.contains) =>
+          (matches :+ review, nonMatches)
+        case ((matches, nonMatches), review) =>
+          (matches, nonMatches :+ review)
+      }
+      .mapConcat { case (matches, nonMatches) =>
+        val occurrencePartition    = gen.shuffle(matches).take((occurrence * nbrReviews).toInt)
+        val notOccurrencePartition = gen.shuffle(nonMatches).take(nbrReviews - occurrencePartition.size)
         
         (occurrencePartition ++ notOccurrencePartition).to[collection.immutable.Seq]
-      })
-      .mapConcat(x => x)
-
-  def matchModelOccurrence = {
-    Flow[UnratedReview]
-
-  }
+      }
 
   def splitReviewsIntoDocuments =
     Flow[RatedReview]
@@ -74,13 +66,8 @@ trait Setup { self: Common with NLPAnalysisService with ClassificationService =>
     val Seq(date, text @ _*) = data.split(",").toSeq
     UnratedReview(new LocalDate(date), text.mkString(","))
   }
-  
-  private def reviewContainsTags(r: UnratedReview) =
-    tags.foldLeft(false)((contains, tag) => {
-      contains || r.text.contains(tag)
-    })
 
-  private def editDocument(doc: ClassifiedDocument) = {  
+  private def editDocument(doc: ClassifiedDocument) = {
     val docInformation = doc.rating + "\nn: " + doc.document.metrics.foldLeft(0){ case (sum, (tag, metrics)) =>
         sum + metrics.freq.toInt
     }

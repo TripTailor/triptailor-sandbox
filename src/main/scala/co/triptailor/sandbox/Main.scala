@@ -24,7 +24,7 @@ object Main extends Common with Setup with NLPAnalysisService with Classificatio
 
   def main(args: Array[String]): Unit = {
     parseFileReviews(new File(config.getString("nlp.reviewsFile")))
-      .via(pickNRandomReviews)
+      .via(matchModelOccurrence)
       .via(produceRatedReviews)
       .via(splitReviewsIntoDocuments)
       .via(classifyDocuments)
