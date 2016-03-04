@@ -45,7 +45,7 @@ trait Setup { self: Common with NLPAnalysisService with ClassificationService =>
 
   def splitReviewsIntoDocuments =
     Flow[RatedReview]
-      .map(review => (split(modelSize), review))
+      .map(review => (split, review))
       .fold(Map.empty[Int, RatedDocument]) { case (mappings, (nbr, review)) =>
         val document = mappings.getOrElse(nbr, RatedDocument(Seq(), Map()))
         mappings.updated(
@@ -65,7 +65,7 @@ trait Setup { self: Common with NLPAnalysisService with ClassificationService =>
         }.runWith(FileIO.toFile(new File(s"${idx + 1}")))
       }
 
-  private def split(n: Int) = gen.nextInt(modelSize) + 1
+  private def split = Random.nextInt(modelSize) + 1
 
   private def toUnratedReview(data: String) = {
     val Seq(date, text @ _*) = data.split(",").toSeq
