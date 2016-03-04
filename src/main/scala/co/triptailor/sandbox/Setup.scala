@@ -10,8 +10,6 @@ import org.joda.time.LocalDate
 import scala.concurrent.Future
 import scala.util.Random
 
-import scala.collection.JavaConverters._
-
 trait Setup { self: Common with NLPAnalysisService with ClassificationService =>
   def gen: Random
   def modelSize: Int
@@ -36,12 +34,17 @@ trait Setup { self: Common with NLPAnalysisService with ClassificationService =>
         )
       })
       .map(partition => {
-        val occurrencePartition = Random.shuffle(partition(true)).take((occurrence * nbrReviews).toInt)
-        val notOccurrencePartition = Random.shuffle(partition(false)).take(nbrReviews - occurrencePartition.size)
+        val occurrencePartition = gen.shuffle(partition(true)).take((occurrence * nbrReviews).toInt)
+        val notOccurrencePartition = gen.shuffle(partition(false)).take(nbrReviews - occurrencePartition.size)
         
         (occurrencePartition ++ notOccurrencePartition).to[collection.immutable.Seq]
       })
       .mapConcat(x => x)
+
+  def matchModelOccurrence = {
+    Flow[UnratedReview]
+
+  }
 
   def splitReviewsIntoDocuments =
     Flow[RatedReview]
@@ -65,7 +68,7 @@ trait Setup { self: Common with NLPAnalysisService with ClassificationService =>
         }.runWith(FileIO.toFile(new File(s"${idx + 1}")))
       }
 
-  private def split = Random.nextInt(modelSize) + 1
+  private def split = gen.nextInt(modelSize) + 1
 
   private def toUnratedReview(data: String) = {
     val Seq(date, text @ _*) = data.split(",").toSeq
