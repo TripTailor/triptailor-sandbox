@@ -56,7 +56,7 @@ trait Setup { self: Common with NLPAnalysisService with ClassificationService =>
       .mapConcat(_.to[collection.immutable.Seq])
       .mapAsync(parallelism = modelSize) { case (classifiedDoc, idx) =>
         Source.single(classifiedDoc).map { doc =>
-          ByteString(editDocument(doc))
+          ByteString(formatDocument(doc))
         }.runWith(FileIO.toFile(new File(s"${idx + 1}")))
       }
 
@@ -67,22 +67,26 @@ trait Setup { self: Common with NLPAnalysisService with ClassificationService =>
     UnratedReview(new LocalDate(date), text.mkString(","))
   }
 
-  private def editDocument(doc: ClassifiedDocument) = {
-    val docInformation = doc.rating + "\nn: " + doc.document.metrics.foldLeft(0){ case (sum, (tag, metrics)) =>
-        sum + metrics.freq.toInt
-    }
-    
-    val tagRatings = doc.ratedTags.map(tag => {
-      tag.attribute + ": " + tag.rating + " - " + doc.document.metrics(tag.attribute).freq.toInt
-    }).mkString("\n")
-    
-    def tokenSentiments(metrics: Map[String, RatingMetrics]) =
-      metrics.filter(token => tags.contains(token._1)).map{case (tag, metrics) => tag + ":" + metrics.sentiment}
-    def editReview(r: RatedReview) =
-      Seq(r.date.toString(), tokenSentiments(r.metrics).mkString(","), r.text).mkString(" | ")
-    val reviewsText = doc.document.reviews.map(editReview).mkString("\n-----------\n")
-    
-    Seq(docInformation, tagRatings, reviewsText).mkString("\n===============\n")
+  private def formatDocument(doc: ClassifiedDocument) = {
+    def tagSentiments(tagsMetrics: Map[String, RatingMetrics]) =
+      tagsMetrics.collect {
+        case (tag, metrics) if tags.contains(tag) => s"$tag:${metrics.sentiment}"
+      }
+
+    def formatReview(r: RatedReview) =
+      Seq(r.date.toString(), tagSentiments(r.metrics).mkString(","), r.text).mkString(" | ")
+
+    def docSummary =
+      doc.rating + "\nn: " + doc.document.metrics.map(_._2.freq.toInt).sum
+
+    def formatTag(tag: RatedTag) =
+      s"${tag.attribute}: ${tag.rating} - ${doc.document.metrics(tag.attribute).freq.toInt}"
+
+    Seq(
+      docSummary,
+      doc.ratedTags.map(formatTag).mkString("\n"),
+      doc.document.reviews.map(formatReview).mkString("\n-----------\n")
+    ).mkString("\n===============\n")
   }
 
 }
