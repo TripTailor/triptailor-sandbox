@@ -22,19 +22,19 @@ trait Setup { self: Common with NLPAnalysisService with ClassificationService =>
       .map(_.utf8String)
       .drop(1) // Drops CSV headers
       .map(toUnratedReview)
-      
+
   def matchModelOccurrence =
     Flow[UnratedReview]
       .fold((Seq.empty[UnratedReview], Seq.empty[UnratedReview])) {
         case ((matches, nonMatches), review) if tags.exists(review.text.contains) =>
-          (matches :+ review, nonMatches)
+          (review +: matches, nonMatches)
         case ((matches, nonMatches), review) =>
-          (matches, nonMatches :+ review)
+          (matches, review +: nonMatches)
       }
       .mapConcat { case (matches, nonMatches) =>
         val occurrencePartition    = gen.shuffle(matches).take((occurrence * nbrReviews).toInt)
         val notOccurrencePartition = gen.shuffle(nonMatches).take(nbrReviews - occurrencePartition.size)
-        
+
         (occurrencePartition ++ notOccurrencePartition).to[collection.immutable.Seq]
       }
 
