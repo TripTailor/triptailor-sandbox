@@ -1,12 +1,11 @@
-name := """triptailor-sandbox"""
-version := "1.0"
-scalaVersion := "2.11.7"
+name         := "triptailor-sandbox"
+version      := "1.0"
+scalaVersion := "2.11.8"
 
 val jodaConvertV = "1.7"
-val akkaV        = "2.4.1"
-val akkaStreamsV = "2.0.3"
+val akkaV        = "2.4.4"
 val nlpAnalysisV = "3.5.2"
-val ammoniteV    = "0.5.4"
+val ammoniteV    = "0.5.7"
 val scalaTestV   = "2.2.4"
 
 val utilityDependencies = Seq(
@@ -20,7 +19,7 @@ val nlpAnalysisDependencies = Seq(
 
 val akkaDependencies = Seq(
   "com.typesafe.akka" %% "akka-actor" % akkaV,
-  "com.typesafe.akka" %% "akka-stream-experimental" % akkaStreamsV
+  "com.typesafe.akka" %% "akka-stream" % akkaV
 )
 
 val ammoniteRepl = Seq(

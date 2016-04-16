@@ -2,7 +2,7 @@ package co.triptailor.sandbox
 
 import java.io.File
 
-import akka.stream.io.Framing
+import akka.stream.IOResult
 import akka.stream.scaladsl._
 import akka.util.ByteString
 import org.joda.time.LocalDate
@@ -16,7 +16,7 @@ trait Setup { self: Common with NLPAnalysisService with ClassificationService =>
   def nbrReviews: Int
   def occurrence: Double
 
-  def parseFileReviews(f: File): Source[UnratedReview, Future[Long]] =
+  def parseFileReviews(f: File): Source[UnratedReview, Future[IOResult]] =
     FileIO.fromFile(f)
       .via(Framing.delimiter(ByteString(System.lineSeparator), maximumFrameLength = Int.MaxValue, allowTruncation = true))
       .map(_.utf8String)

@@ -2,6 +2,7 @@ package co.triptailor.sandbox
 
 import java.util.Properties
 
+import akka.NotUsed
 import akka.stream.scaladsl.Flow
 import edu.stanford.nlp.dcoref.CoNLL2011DocumentReader.NamedEntityAnnotation
 import edu.stanford.nlp.ling.CoreAnnotations.{LemmaAnnotation, PartOfSpeechAnnotation, SentencesAnnotation, TokensAnnotation}
@@ -29,7 +30,7 @@ trait NLPAnalysisService { self: Common =>
 
   val pipeline = new StanfordCoreNLP(props)
 
-  def produceRatedReviews: Flow[UnratedReview, RatedReview, Unit] =
+  def produceRatedReviews: Flow[UnratedReview, RatedReview, NotUsed] =
     Flow[UnratedReview].mapAsync(parallelism = Runtime.getRuntime.availableProcessors() + 1)(rateReview)
 
   private def rateReview(review: UnratedReview): Future[RatedReview] = {
