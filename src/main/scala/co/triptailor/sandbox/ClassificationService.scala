@@ -35,7 +35,7 @@ trait ClassificationService { self: Common =>
     } yield ClassifiedDocument(doc, rating = compute_bm25(ratedTags), ratedTags)).sorted
 
   private def compute_bm25(ratedTags: Seq[RatedTag]) =
-    ratedTags.foldLeft( 0d )(_ + _.rating)
+    ratedTags.sumBy(_.rating)
 
   private def rateTags(ratingMetrics: Map[String, RatingMetrics], tags: Set[String], dl: Double, avdl: Double) =
     ratingMetrics.collect {
@@ -44,10 +44,10 @@ trait ClassificationService { self: Common =>
     }.toSeq
 
   private def compute_avdl(m: Model, tags: Set[String]): Double =
-    m.foldLeft( 0d )(_ + compute_dl(_)) / m.size
+    m.sumBy(compute_dl) / m.size
 
   private def compute_dl(doc: RatedDocument): Double =
-    doc.metrics.map(_._2.freq).sum
+    doc.metrics.sumBy(_._2.freq)
 }
 
 object ClassificationService {
