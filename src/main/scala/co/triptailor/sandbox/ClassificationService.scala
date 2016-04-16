@@ -5,7 +5,6 @@ import scala.collection.JavaConverters._
 /**
   * csen = (cfreq * sen) / freq
   *
-  * BM25 Model
   * rating = csen / (1-b + b(dl/avdl))
   *
   * b      - classification normalizer
@@ -32,10 +31,7 @@ trait ClassificationService { self: Common =>
       doc       ← m
       dl        = compute_dl(doc)
       ratedTags = rateTags(doc.metrics, tags, dl, compute_avdl(m, tags))
-    } yield ClassifiedDocument(doc, rating = compute_bm25(ratedTags), ratedTags)).sorted
-
-  private def compute_bm25(ratedTags: Seq[RatedTag]) =
-    ratedTags.sumBy(_.rating)
+    } yield ClassifiedDocument(doc, rating = ratedTags.sumBy(_.rating), ratedTags)).sorted
 
   private def rateTags(ratingMetrics: Map[String, RatingMetrics], tags: Set[String], dl: Double, avdl: Double) =
     ratingMetrics.collect {
