@@ -6,7 +6,7 @@ val jodaConvertV = "1.8.1"
 val akkaV        = "2.4.14"
 val nlpAnalysisV = "3.6.0"
 val ammoniteV    = "0.7.8"
-val scalaTestV   = "2.2.4"
+val scalaTestV   = "3.0.1"
 
 val utilityDependencies = Seq(
   "org.joda" % "joda-convert" % jodaConvertV
