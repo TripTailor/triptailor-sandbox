@@ -23,7 +23,7 @@ val akkaDependencies = Seq(
 )
 
 val ammoniteRepl = Seq(
-  "com.lihaoyi" % "ammonite-repl" % ammoniteV cross CrossVersion.full
+  "com.lihaoyi" % "ammonite" % ammoniteV cross CrossVersion.full
 )
 
 val testDependencies = Seq(
