@@ -4,7 +4,7 @@ scalaVersion := "2.11.8"
 
 val jodaConvertV = "1.7"
 val akkaV        = "2.4.14"
-val nlpAnalysisV = "3.5.2"
+val nlpAnalysisV = "3.6.0"
 val ammoniteV    = "0.7.8"
 val scalaTestV   = "2.2.4"
 
