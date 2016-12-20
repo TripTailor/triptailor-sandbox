@@ -2,7 +2,7 @@ name         := "triptailor-sandbox"
 version      := "1.0"
 scalaVersion := "2.11.8"
 
-val jodaConvertV = "1.7"
+val jodaConvertV = "1.8.1"
 val akkaV        = "2.4.14"
 val nlpAnalysisV = "3.6.0"
 val ammoniteV    = "0.7.8"
