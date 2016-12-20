@@ -34,7 +34,10 @@ val testDependencies = Seq(
 libraryDependencies ++=
   utilityDependencies ++ nlpAnalysisDependencies ++ akkaDependencies ++ ammoniteRepl ++ testDependencies
 
-initialCommands in console := """ammonite.repl.Main.run("")"""
+initialCommands in console := """ammonite.Main().run()"""
+
+// Compile options
+scalacOptions in Compile := Seq("-Xlint", "-deprecation", "-feature", "-unchecked", "-encoding", "utf8", "-Ywarn-dead-code")
 
 // Clear console at the start of each run
 triggeredMessage in ThisBuild := Watched.clearWhenTriggered
