@@ -1,6 +1,7 @@
 package co.triptailor.sandbox
 
 import java.io.File
+import java.nio.file.Paths
 
 import akka.stream.IOResult
 import akka.stream.scaladsl._
@@ -17,7 +18,7 @@ trait Setup { self: Common with NLPAnalysisService with ClassificationService =>
   def occurrence: Double
 
   def parseFileReviews(f: File): Source[UnratedReview, Future[IOResult]] =
-    FileIO.fromFile(f)
+    FileIO.fromPath(Paths.get(f.toString))
       .via(Framing.delimiter(ByteString(System.lineSeparator), maximumFrameLength = Int.MaxValue, allowTruncation = true))
       .map(_.utf8String)
       .drop(1) // Drops CSV headers
@@ -57,7 +58,7 @@ trait Setup { self: Common with NLPAnalysisService with ClassificationService =>
       .mapAsync(parallelism = modelSize) { case (classifiedDoc, idx) =>
         Source.single(classifiedDoc).map { doc =>
           ByteString(formatDocument(doc))
-        }.runWith(FileIO.toFile(new File(s"${idx + 1}")))
+        }.runWith(FileIO.toPath(Paths.get(s"${idx + 1}")))
       }
 
   private def split = gen.nextInt(modelSize) + 1
